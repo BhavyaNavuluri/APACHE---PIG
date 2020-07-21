@@ -1,31 +1,31 @@
 
-# Loading U_data.txt file 
+-- Loading U_data.txt file 
 movie_ratings = LOAD '/user/maria_dev/ml-100k/U_data.txt' AS (userID:int, movieID:int, rating:int, ratingTime:int);
 
 
 
-# Loading U_item.txt file 
+-- Loading U_item.txt file 
 movie_data = LOAD '/user/maria_dev/ml-100k/U_data.txt' USING PigStorage('|') AS (movieID:int, movieTitle:chararray, releaseDate:chararray, videoRealese:chararray, imdblink:chararray);
 
 
 nameLookup = FOREACH metadata GENERATE movieID, movieTitle,
 	ToUnixTime(ToDate(releaseDate, 'dd-MMM-yyyy')) AS releaseTime;
 
-# Identifying number of people given ratings  per each movie
+-- Identifying number of people given ratings  per each movie
 ratingsByMovie = GROUP ratings BY movieID;
 
-# Identifying average ratings  per each movie
+-- Identifying average ratings  per each movie
 avgRatings = FOREACH ratingsByMovie GENERATE group as movieID, AVG(ratings.rating) as avgRating;
 
-# Filtering movie ratings  greater than 4.0
+-- Filtering movie ratings  greater than 4.0
 fiveStarMovies = FILTER avgRatings BY avgRating > 4.0;
 
-# Joining two schemas
+-- Joining two schemas
 fiveStarsWithData = JOIN fiveStarMovies BY movieID, nameLookup BY movieID;
 
-# Ordering Movies by Realease time
+-- Ordering Movies by Realease time
 oldestFiveStarMovies = ORDER fiveStarsWithData BY nameLookup::releaseTime;
 
-# Displaying oldestFiveStarMovies
+-- Displaying oldestFiveStarMovies
 
 DUMP oldestFiveStarMovies;
